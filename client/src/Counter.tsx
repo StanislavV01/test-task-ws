@@ -1,46 +1,53 @@
-import { useEffect, useRef, useState } from "react";
-import { io, Socket } from "socket.io-client";
+import React, { useState, useEffect, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 
-
-
-function Counter() {
+const Counter: React.FC = () => {
 	const [counter, setCounter] = useState<number>(0);
-	const counterRef = useRef<number>(counter)
-	const SocketRef = useRef<Socket | null>()
+	const counterRef = useRef<number>(counter);
+	const socketRef = useRef<Socket | null>(null);
 
 	useEffect(() => {
-
 		counterRef.current = counter;
 	}, [counter]);
 
-	useEffect(() => {
-		const socket = io('http://localhost:8080')
-		SocketRef.current = socket;
 
-		socket.on("connect", () => {
-			console.log('Connected with', socket.id);
+	useEffect(() => {
+		const socket = io('http://localhost:8080', {
+			reconnectionAttempts: 5,
+			transports: ['websocket'],
 		});
-		socket.on('GET_VALUE', () => {
-			socket.emit('CounterData', { counter: counterRef.current })
-		})
-		socket.on("disconnect", () => {
-			console.log('Disconnected with', socket.id);
+		socketRef.current = socket;
+
+		socket.on('connect', () => {
+			console.log('Connected to server:', socket.id);
 		});
+
+		socket.on('connect_error', (err: Error) => {
+			console.error('Connection error:', err);
+		});
+
+
+		socket.on('GET_COUNTER', () => {
+			console.log('Received GET_COUNTER event');
+			socket.emit('counterValue', { counter: counterRef.current });
+		});
+
 		return () => {
-			socket.disconnect()
+			socket.disconnect();
 		};
 	}, []);
 
 	const handleIncrement = () => {
-		setCounter(prev => prev + 1)
-	}
+		setCounter((prev) => prev + 1);
+	};
+
 	return (
 		<div>
-			<p>Counter data</p>
-			<p> counter value: {counter}</p>
-			<button onClick={handleIncrement}> increment value</button>
+			<h2>Counter Component</h2>
+			<p>Counter Value: {counter}</p>
+			<button onClick={handleIncrement}>Increment</button>
 		</div>
-	)
-}
+	);
+};
 
-export default Counter
+export default Counter;
