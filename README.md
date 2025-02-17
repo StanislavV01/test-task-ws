@@ -20,6 +20,10 @@ This project demonstrates a real-time application with a React counter component
 ### Server (Backend)
 
 1. **Clone or create the server directory:**
+    Create .env with 
+    ```
+      PORT=8080
+    ```
 
    ```bash
    mkdir express-socketio-server
